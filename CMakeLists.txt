@@ -7,7 +7,7 @@ set(CMAKE_CPP_COMPILER mpic++)
 SET(CPPFLAGS "-Wall -Wpedantic -Wextra -std=c++17 -O3 -Ofast -march=native")
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${CPPFLAGS}")
 
-add_executable(benchmark src/benchmark.cpp)
+add_executable(benchmark src/benchmark.cpp src/utils.cpp)
 
 # set up mpi requirement
 find_package(MPI REQUIRED)
