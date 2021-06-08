@@ -19,13 +19,15 @@ fi
 make benchmark
 
 for use_shm in 0 1 ; do
-  for n_partners in 2 4 8 ; do
-    echo "mpirun -n 9 ./benchmark $use_shm $n_partners 1000 4096 0"
-    mpirun --oversubscribe -n 9 ./benchmark $use_shm $n_partners 1000 4096 0
-    EXIT_CODE=$?
-    if [ "$EXIT_CODE" -ne "0" ] ; then
-        exit 1
-    fi
+  for lock_each_iteration in 0 1 ; do
+    for n_partners in 2 4 8 ; do
+      echo "mpirun -n 9 ./benchmark $use_shm $lock_each_iteration $n_partners 20 1000 4096 0"
+      mpirun --oversubscribe -n 9 ./benchmark $use_shm $lock_each_iteration $n_partners 20 1000 4096 0
+      EXIT_CODE=$?
+      if [ "$EXIT_CODE" -ne "0" ] ; then
+          exit 1
+      fi
+    done
   done
 done
 
