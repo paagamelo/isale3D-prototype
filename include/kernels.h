@@ -1,3 +1,6 @@
+/*
+ * Created by Lorenzo Paganelli (acse-lp320, paagamelo on GitHub).
+ */
 /**
  * TODO: split in .h and .cpp.
  */
@@ -8,6 +11,8 @@
 #include "setup.h"
 #include <mpi.h>
 #include <iostream>
+#include <cassert>
+#include <cstring>
 
 /**
  * An abstract computation featuring data exchanges between neighboring MPI

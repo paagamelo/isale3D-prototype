@@ -1,3 +1,6 @@
+/*
+ * Created by Lorenzo Paganelli (acse-lp320, paagamelo on GitHub).
+ */
 /**
  * TODO: document.
  *
