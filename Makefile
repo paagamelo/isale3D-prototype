@@ -2,7 +2,7 @@ CXXFLAGS=-std=c++11 -O3 -march=native
 HEADERS=$(wildcard include/*.h)
 # object files the benchmark depends on
 OBJ=src/setup.o src/utils.o
-export CXX=mpic++
+export CXX=mpic++ # mpiicc if using intel
 
 all: benchmark
 
@@ -15,4 +15,3 @@ src/%.o: src/%.cpp
 clean:
 	\rm -f src/*.o
 	\rm -f benchmark
-	\rm -f *out*txt
