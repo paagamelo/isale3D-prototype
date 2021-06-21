@@ -1,1 +1,1 @@
-# halo-exchange-benchmark
+# isale-benchmark
