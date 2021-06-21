@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+#PBS -N isale-benchmark
+#PBS -l walltime=00:10:00
+#PBS -l nodes=1:ppn=36
+#PBS -M lp320@ic.ac.uk
+#PBS -A dp120
+
+module load gcc/6.4
+module load openmpi/gcc/4.0.3
+
+make benchmark
+
+mpirun ./benchmark
