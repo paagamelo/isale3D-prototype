@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
         // good idea. Process 0 will read it and broadcast its content.
         if (rank == 0)
         {
-            std::string fname = "/scratch/dp120/dc-paga2/isale-benchmark/config.txt";
+            std::string fname = "config.txt";
             std::ifstream file;
             file.open(fname);
             if (file.fail())
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
                             std::to_string(n_iterations) + "_" +
                             std::to_string(message_size) + ".txt";
         */
-        std::string fname = "/scratch/dp120/dc-paga2/isale-benchmark/out_" +
+        std::string fname = "out_" +
                             std::to_string(use_allreduce) + "_" +
                             std::to_string(n_reps) + "_" +
                             std::to_string(n_iterations) + "_" + ".txt";

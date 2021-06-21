@@ -2,11 +2,14 @@
 #
 #PBS -N isale-benchmark
 #PBS -l walltime=00:10:00
-#PBS -l nodes=1:ppn=36
+#PBS -m bea
 #PBS -M lp320@ic.ac.uk
 #PBS -A dp120
+#PBS -l nodes=1:ppn=36
 
 module load gcc/6.4
-module load openmpi/gcc/4.0.3
+module load openmpi/gcc/3.0.1
 
-mpirun /scratch/dp120/dc-paga2/isale-benchmark/benchmark
+cd /scratch/dp120/dc-paga2/isale-benchmark/
+
+mpiexec ./benchmark 0 30 1000 0
