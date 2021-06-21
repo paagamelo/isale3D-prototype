@@ -1,3 +1,6 @@
+/*
+ * Created by Lorenzo Paganelli (acse-lp320, paagamelo on GitHub).
+ */
 #ifndef HALO_EXCHANGE_BENCHMARK_SETUP_H
 #define HALO_EXCHANGE_BENCHMARK_SETUP_H
 
