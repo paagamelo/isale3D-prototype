@@ -9,6 +9,4 @@
 module load gcc/6.4
 module load openmpi/gcc/4.0.3
 
-make benchmark
-
-mpirun ./benchmark
+mpirun /scratch/dp120/dc-paga2/isale-benchmark/benchmark
