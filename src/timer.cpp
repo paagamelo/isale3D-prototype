@@ -1,6 +1,8 @@
+/*
+ * Created by Lorenzo Paganelli (acse-lp320, paagamelo on GitHub).
+ */
 #include "timer.h"
 #include <mpi.h>
-#include <limits>
 #include <algorithm>
 
 template<typename F, typename G, typename H>
@@ -35,7 +37,7 @@ double time(int rank, int n_reps, int n_iterations, F kernel, G begin, H end)
     if (rank == 0)
         // Across different repetitions, we select the minimum of the biggest
         // execution times, as it's a reproducible measure.
-        min = *std::max_element(max_dts, max_dts + n_reps);
+        min = *std::min_element(max_dts, max_dts + n_reps);
     delete[] dts;
     if (rank == 0) delete[] max_dts;
     return min;
