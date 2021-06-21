@@ -6,6 +6,17 @@
  *
  * To compile: mkdir build && cd build && cmake .. && make benchmark
  *
+ * Usage: mpirun -n P ./benchmark [use_allreduce n_reps n_iterations verbose]
+ * P = number of processes to run.
+ * use_allreduce = whether to exchange the timestep with an allreduce or not
+ * (see exchange_dt.h).
+ * n_reps = number of times the benchmark is run to find the minimum
+ * average elapsed time.
+ * n_iterations = number of times halos are exchanged to find the average
+ * elapsed time.
+ * verbose = whether to print extra info during execution (either 0 or 1).
+ *
+ * *OUT OF DATE*
  * Usage: mpirun -n P ./benchmark [use_shm lock_each_iteration n_partners n_reps n_iterations message_size verbose]
  * P = number of processes to run.
  * use_shm = whether to use shared memory communication between processes on
@@ -20,6 +31,7 @@
  * elapsed time.
  * message_size = size of messages in bytes.
  * verbose = whether to print extra info during execution (either 0 or 1).
+ *
  * Alternatively, the software can be run with no command line argument. In this
  * case, a "config.txt" file is assumed to be located in the directory of
  * execution. Such file should contain the arguments described above in its
@@ -33,9 +45,11 @@
  * [5] https://dl.acm.org/doi/10.5555/648136.748782
  * [6] https://www.mcs.anl.gov/research/projects/mpi/mpptest/
  */
+/// TODO: include guards in every file are to be updated.
 #include "timer.cpp" // due to templates
-#include "kernels.h"
+/// #include "kernels.h"
 #include "utils.h"
+#include "exchange_dt.h"
 #include <mpi.h>
 #include <iostream>
 #include <algorithm>
@@ -44,7 +58,7 @@
 #include <limits>
 
 // Number of arguments the software takes.
-#define N_ARGS 7
+#define N_ARGS 4 /// 7
 
 int main(int argc, char *argv[])
 {
@@ -93,8 +107,11 @@ int main(int argc, char *argv[])
             // so arguments are shifted by one.
             args[i] = std::stoi(argv[i + 1]);
     }
-    bool use_shm, lock_each_iteration, verbose;
-    int n_partners, n_reps, n_iterations, message_size;
+    /// bool use_shm, lock_each_iteration, verbose;
+    /// int n_partners, n_reps, n_iterations, message_size;
+    bool use_allreduce, verbose;
+    int n_reps, n_iterations;
+    /*
     use_shm = args[0] != 0;
     lock_each_iteration = args[1] != 0;
     n_partners = args[2];
@@ -102,17 +119,35 @@ int main(int argc, char *argv[])
     n_iterations = args[4];
     message_size = args[5];
     verbose = args[6] != 0;
+    */
+    use_allreduce = args[0] != 0;
+    n_reps = args[1];
+    n_iterations = args[2];
+    verbose = args[3] != 0;
+
+    /*
+    if (verbose && rank == 0)
+    {
+        std::cout << "will run " << n_reps << " repetitions with " << n_iterations
+                  << " iterations each\n";
+    }
+    */
 
     Computation* comp;
+    if (use_allreduce) comp = new AllReduce(rank, n_processes);
+    else comp = new GatherBcast(rank, n_processes);
+    /*
     if (use_shm)
         comp = new Shm(rank, n_processes, n_partners, message_size,
                        lock_each_iteration);
     else
         comp = new PointToPoint(rank, n_processes, n_partners, message_size);
+    */
 
     double dt = time(rank, n_reps, n_iterations, *comp);
     if (rank == 0)
     {
+        /*
         std::string fname = "out_" +
                             std::to_string(use_shm) + "_" +
                             std::to_string(lock_each_iteration) + "_" +
@@ -120,12 +155,16 @@ int main(int argc, char *argv[])
                             std::to_string(n_reps) + "_" +
                             std::to_string(n_iterations) + "_" +
                             std::to_string(message_size) + ".txt";
+        */
+        std::string fname = "out_" +
+                            std::to_string(use_allreduce) + "_" +
+                            std::to_string(n_reps) + "_" +
+                            std::to_string(n_iterations) + "_" + ".txt";
         std::ofstream file;
-        file.open(fname);
+        file.open(fname, std::ios_base::app);
         if (file.fail()) std::cerr << "Can't open output file\n";
         else
         {
-            /// TODO: append to file maybe?
             file.precision(std::numeric_limits<double>::max_digits10);
             file << dt << "\n";
             file.close();
