@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
         std::string fname = "out_" +
                             std::to_string(use_allreduce) + "_" +
                             std::to_string(n_reps) + "_" +
-                            std::to_string(n_iterations) + "_" + ".txt";
+                            std::to_string(n_iterations) + ".txt";
         std::ofstream file;
         file.open(fname, std::ios_base::app);
         if (file.fail()) std::cerr << "Can't open output file\n";
