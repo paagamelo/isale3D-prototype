@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
                             std::to_string(n_iterations) + "_" +
                             std::to_string(message_size) + ".txt";
         */
-        std::string fname = "out_" +
+        std::string fname = "/scratch/dp120/dc-paga2/isale-benchmark/out_" +
                             std::to_string(use_allreduce) + "_" +
                             std::to_string(n_reps) + "_" +
                             std::to_string(n_iterations) + "_" + ".txt";
