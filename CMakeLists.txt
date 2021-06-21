@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(halo_exchange_benchmark)
+project(isale_benchmark)
 
 # set up compiler
 set(CMAKE_CPP_COMPILER mpic++)
