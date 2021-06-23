@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(isale-benchmark)
+project(isale3D-prototype)
 
 # set up compiler
 set(CMAKE_CPP_COMPILER mpic++)

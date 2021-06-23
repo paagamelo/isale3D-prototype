@@ -1,8 +1,8 @@
 /*
  * Created by Lorenzo Paganelli (acse-lp320, paagamelo on GitHub).
  */
-#ifndef HALO_EXCHANGE_BENCHMARK_TIMER_H
-#define HALO_EXCHANGE_BENCHMARK_TIMER_H
+#ifndef ISALE3D_PROTOTYPE_TIMER_H
+#define ISALE3D_PROTOTYPE_TIMER_H
 
 /**
  * Times a given MPI kernel. The kernel is run for a given number of iterations
@@ -98,4 +98,4 @@ struct Computation
  */
 double time(int rank, int n_reps, int n_iterations, Computation& comp);
 
-#endif // HALO_EXCHANGE_BENCHMARK_TIMER_H
+#endif // ISALE3D_PROTOTYPE_TIMER_H

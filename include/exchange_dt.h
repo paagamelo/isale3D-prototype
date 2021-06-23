@@ -4,8 +4,8 @@
 /**
  * Contains kernels emulating iSALE timestep exchange.
  */
-#ifndef ISALE_BENCHMARK_EXCHANGE_DT_H
-#define ISALE_BENCHMARK_EXCHANGE_DT_H
+#ifndef ISALE3D_PROTOTYPE_EXCHANGE_DT_H
+#define ISALE3D_PROTOTYPE_EXCHANGE_DT_H
 
 #include <random>
 #include <algorithm>
@@ -83,4 +83,4 @@ struct AllReduce : ExchangeDt
     }
 };
 
-#endif // ISALE_BENCHMARK_EXCHANGE_DT_H
+#endif // ISALE3D_PROTOTYPE_EXCHANGE_DT_H

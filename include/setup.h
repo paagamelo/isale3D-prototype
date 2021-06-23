@@ -1,8 +1,8 @@
 /*
  * Created by Lorenzo Paganelli (acse-lp320, paagamelo on GitHub).
  */
-#ifndef HALO_EXCHANGE_BENCHMARK_SETUP_H
-#define HALO_EXCHANGE_BENCHMARK_SETUP_H
+#ifndef ISALE3D_PROTOTYPE_SETUP_H
+#define ISALE3D_PROTOTYPE_SETUP_H
 
 /**
  * Finds the global ranks of this process' partners. At the moment, only 2, 4
@@ -24,4 +24,4 @@
  */
 int find_partners(int rank, int n_processes, int n_partners, int* partners);
 
-#endif // HALO_EXCHANGE_BENCHMARK_SETUP_H
+#endif // ISALE3D_PROTOTYPE_SETUP_H

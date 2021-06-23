@@ -4,8 +4,8 @@
 /**
  * TODO: split in .h and .cpp.
  */
-#ifndef HALO_EXCHANGE_BENCHMARK_KERNELS_H
-#define HALO_EXCHANGE_BENCHMARK_KERNELS_H
+#ifndef ISALE3D_PROTOTYPE_KERNELS_H
+#define ISALE3D_PROTOTYPE_KERNELS_H
 
 #include "timer.h"
 #include "setup.h"
@@ -337,4 +337,4 @@ struct Shm : HalosExchange
     }
 };
 
-#endif // HALO_EXCHANGE_BENCHMARK_KERNELS_H
+#endif // ISALE3D_PROTOTYPE_KERNELS_H

@@ -1,8 +1,8 @@
 /*
  * Created by Lorenzo Paganelli (acse-lp320, paagamelo on GitHub).
  */
-#ifndef HALO_EXCHANGE_BENCHMARK_UTILS_H
-#define HALO_EXCHANGE_BENCHMARK_UTILS_H
+#ifndef ISALE3D_PROTOTYPE_UTILS_H
+#define ISALE3D_PROTOTYPE_UTILS_H
 
 #include <string>
 
