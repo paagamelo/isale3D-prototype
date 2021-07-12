@@ -219,42 +219,4 @@ struct AllReduce : ExchangeDt
     }
 };
 
-/**
- * Uses a MPI_Allreduce with MPI_MINLOC operator (see [4]). Differs from
- * `AllReduce` in that the index exchanged is the rank of this process. The
- * owner of the global limiting timestep will then send its x, y, z location
- * to the root process.
- */
-struct AllReduceSend : AllReduce
-{
-    AllReduceSend(int rank, int n_processes) : AllReduce(rank, n_processes) { }
-
-    inline void kernel(int, int) override
-    {
-        sbuf.dt = dt;
-        sbuf.index = rank;
-
-        MPI_Allreduce(&sbuf, &rbuf, 1, MPI_DOUBLE_INT, MPI_MINLOC, MPI_COMM_WORLD);
-#ifdef DEBUG_MODE
-        std::cout << "rank " << rank << " min dt " << rbuf.dt << "\n";
-#endif
-        int coords[3] = {x, y, z};
-        if (rbuf.index != 0)
-        {
-            if (rbuf.index == rank)
-                MPI_Send(coords, 3, MPI_INT, 0, 0, MPI_COMM_WORLD);
-            if (rank == 0)
-                MPI_Recv(coords, 3, MPI_DOUBLE, rbuf.index, 0, MPI_COMM_WORLD,
-                         MPI_STATUS_IGNORE);
-        }
-#ifdef DEBUG_MODE
-        if (rank == 0)
-        {
-            std::cout << "min dt at " << coords[0] << ", " << coords[1] << ", "
-                      << coords[2] << "\n";
-        }
-#endif
-    }
-};
-
 #endif // ISALE3D_PROTOTYPE_EXCHANGE_DT_H
