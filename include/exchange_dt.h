@@ -143,7 +143,7 @@ struct Packer
         assert(max + max * dscale + max * dscale2 < pow(2, 53));
     }
 
-    [[nodiscard]] inline double pack(int x, int y, int z) const
+    inline double pack(int x, int y, int z) const
     {
         return x + y * dscale + z * dscale2;
     }
@@ -186,7 +186,7 @@ struct AllReduce : ExchangeDt
     {
         // initialise data with a seed which differs between processes.
         rand_init(31 * rank);
-        // In fortran, when using MPI_MINLOC indices and values have to be
+        // In fortran, when using MPI_MINLOC, indices and values have to be
         // coerced to the same type (i.e., double). In C++, they can't be
         // of the same type (indices can only be integers). See [4] 5.9.4.
         // Thus, in fortran we would pack 3D integer indices into doubles; in
@@ -195,7 +195,7 @@ struct AllReduce : ExchangeDt
         // However, we will cast the packed value to int and effectively send
         // integers rather than doubles. This is the best we can do.
         // Since we are using integers under the hood, we need to make
-        // sure we can pack/unpack them correctly in a single int (see the
+        // sure we can pack/unpack indices correctly in a single int (see the
         // comments in Packer's constructor).
         auto max_packed = MAX_COORD * (1 + packer.dscale + packer.dscale2);
         auto int_max = std::numeric_limits<int>::max();

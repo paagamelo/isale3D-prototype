@@ -46,11 +46,6 @@
 // architecture.
 template<typename F, typename G, typename H>
 double time(int rank, int n_reps, int n_iterations, F kernel, G begin, H end);
-/// TODO: consider alternatives to templating, e.g.
-/*
-double time(int rank, int n_processes, int n_reps, int n_iterations,
-            void (*kernel)(int, int), void (*begin)(int), void (*end)(int));
-*/
 
 /**
  * A computation to be timed with functionalities defined in this file
@@ -64,7 +59,8 @@ struct Computation
 {
     /*
      * The piece of code below (mentioning and linking C++ core guidelines)
-     * is adapted from my ACSE-5 coursework.
+     * is adapted from my ACSE-5 coursework:
+     * https://github.com/acse-2020/group-project-most-vexing-parse
      */
 
     Computation() = default;

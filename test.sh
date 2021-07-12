@@ -2,33 +2,43 @@
 
 ## TODO: document.
 
-# current directory
-DIR=${PWD##*/}
-# build directory
-BUILD="build"
+make clean
+make
 
-# head to the build directory if we're not there
-if [ "$DIR" != "$BUILD" ] ; then
-  # create the build directory if it's not there, and run cmake.
-  if [ ! -d "$BUILD" ] ; then
-    mkdir $BUILD && cd $BUILD && cmake .. && cd ..
-  fi
-  cd $BUILD || exit 1
+echo "mpirun --oversubscribe -n 10 ./benchmark GatherBcast 10 100 dummy"
+mpirun --oversubscribe -n 10 ./benchmark GatherBcast 10 100 dummy
+EXIT_CODE=$?
+if [ "$EXIT_CODE" -ne "0" ] ; then
+  exit 1
+fi
+echo "mpirun --oversubscribe -n 10 ./benchmark AllReduce 10 100 dummy"
+mpirun --oversubscribe -n 10 ./benchmark AllReduce 10 100 dummy
+EXIT_CODE=$?
+if [ "$EXIT_CODE" -ne "0" ] ; then
+  exit 1
 fi
 
-make benchmark
+for n_partners in 2 4 8 ; do
+  echo "mpirun --oversubscribe -n 9 ./benchmark PointToPoint 10 100 dummy 4096 $n_partners"
+  mpirun --oversubscribe -n 9 ./benchmark PointToPoint 10 100 dummy 4096 $n_partners
+  EXIT_CODE=$?
+  if [ "$EXIT_CODE" -ne "0" ] ; then
+      exit 1
+  fi
+done
 
-for use_shm in 0 1 ; do
-  for lock_each_iteration in 0 1 ; do
-    for n_partners in 2 4 8 ; do
-      echo "mpirun -n 9 ./benchmark $use_shm $lock_each_iteration $n_partners 20 1000 4096 0"
-      mpirun --oversubscribe -n 9 ./benchmark $use_shm $lock_each_iteration $n_partners 20 1000 4096 0
-      EXIT_CODE=$?
-      if [ "$EXIT_CODE" -ne "0" ] ; then
-          exit 1
-      fi
-    done
+for lock_each_iteration in 0 1 ; do
+  for n_partners in 2 4 8 ; do
+    echo "mpirun --oversubscribe -n 9 ./benchmark Shm 10 100 dummy 4096 $n_partners $lock_each_iteration"
+    mpirun --oversubscribe -n 9 ./benchmark Shm 10 100 dummy 4096 $n_partners $lock_each_iteration
+    EXIT_CODE=$?
+    if [ "$EXIT_CODE" -ne "0" ] ; then
+        exit 1
+    fi
   done
 done
+
+make clean
+rm dummy.txt
 
 echo "Test passed"

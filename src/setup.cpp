@@ -10,15 +10,13 @@
 
 int find_partners(int rank, int n_processes, int n_partners, int* partners)
 {
-    /// TODO: [future improvements] support more of partners.
     if (n_partners != 2 && n_partners != 4 && n_partners != 8)
     {
         if (rank == 0)
             std::cerr << "Number of partners must be either 2, 4 or 8\n";
         return 1;
     }
-    /// TODO: [future improvements] only periodic boundaries are supported atm.
-    /// Consider supporting other types of boundary conditions.
+    /// TODO: consider supporting other types of boundary conditions.
     // In case of two partners, they are found in a one-dimensional fashion.
     if (n_partners == 2)
     {

@@ -1,8 +1,11 @@
 /*
  * Created by Lorenzo Paganelli (acse-lp320, paagamelo on GitHub).
  */
+/// TODO: split in .h and .cpp?
 /**
- * TODO: split in .h and .cpp.
+ * Contains kernels emulating halos exchange between processes, with different
+ * techniques (e.g. point-wise communications, MPI-3 SHM, ...). Kernels in this
+ * file are mainly adapted from [2] (bibliography is on top of benchmark.cpp).
  */
 #ifndef ISALE3D_PROTOTYPE_KERNELS_H
 #define ISALE3D_PROTOTYPE_KERNELS_H
@@ -70,8 +73,8 @@ struct HalosExchange : Computation
       */
     // The rationale here is to fill sbuf with values that can be easily checked
     // by other processes (processes just need to know the global rank of this
-    // process and the iteration number to check whether they received correct
-    // data).
+    // process and the iteration number in order to check whether they received
+    // correct data).
     virtual void fill_sbuf(int it)
     {
         for (int i = 0; i < n_elements; i++)
@@ -138,9 +141,6 @@ struct PointToPoint : HalosExchange
             rq += 2;
         }
 
-        /// TODO: we could wait for receives to complete and check_rbuf while
-        /// sends run in the background. This is fundamental. Would require
-        /// incremental tags probably.
         MPI_Waitall(2 * n_partners, reqs, MPI_STATUSES_IGNORE);
 
         for (int i = 0; i < n_partners; i++)

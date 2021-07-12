@@ -4,18 +4,29 @@
 /**
  * TODO: document.
  *
- * To compile: mkdir build && cd build && cmake .. && make benchmark
- * Or: make (for systems without cmake >= 3.10 installed)
+ * To compile with cmake: mkdir build && cd build && cmake .. && make benchmark
+ * To compile without cmake: make
  *
- * Usage: mpirun -n P ./benchmark [kernel_id n_reps n_iterations output_fname]
+ * Usage: mpirun -n P ./benchmark [kernel n_reps n_iterations outname]
  * P = number of processes to run.
- * kernel_id = which kernel to time. 0 = GatherBcast, 1 = Allreduce,
- * 2 = AllreduceSend (see exchange_dt.h).
+ * kernel = name of the kernel to run (see exchange_dt.h and kernels.h).
  * n_reps = number of times the benchmark is repeated to find the minimum
  * average elapsed time (see timer.h).
  * n_iterations = number of times the kernel is run to find the average
  * elapsed time (see timer.h).
- * output_fname = name of the output file.
+ * outname = name of the output file.
+ * Extra arguments needed if kernel == PointToPoint (to be provided in the
+ * following order):
+ * message_size = size of messages in bytes.
+ * n_partners = number of partners for each process (either 2, 4 or 8).
+ * Extra arguments needed if kernel == Shm (to be provided in the following
+ * order):
+ * message_size = see above.
+ * n_partners = see above.
+ * lock_each_iteration = whether to lock/unlock the shared window on a
+ * per *iteration* basis (either 0 or 1: 0 meaning the window will be locked and
+ * timed on a per *repetition* basis, 1 on a per *iteration* basis).
+ *
  *
  * Bibliography:
  * [1] https://cvw.cac.cornell.edu/mpionesided/onesidedef
@@ -26,8 +37,9 @@
  * [6] https://www.mcs.anl.gov/research/projects/mpi/mpptest/
  */
 #include "timer.cpp" // due to templates
-#include "utils.h"
+#include "kernels.h"
 #include "exchange_dt.h"
+
 #include <mpi.h>
 #include <iostream>
 #include <algorithm>
@@ -35,8 +47,11 @@
 #include <sstream>
 #include <limits>
 
-// Number of arguments the software takes.
-#define N_ARGS 4 /// 7
+void arg_error(int rank)
+{
+    if (rank == 0) std::cerr << "Inconsistent arguments. See benchmark.cpp\n";
+    MPI_Abort(MPI_COMM_WORLD, 1);
+}
 
 int main(int argc, char *argv[])
 {
@@ -47,29 +62,34 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &n_processes);
 
     // Read configuration parameters.
-    /// TODO: use dashed options and getopt().
-    if (argc != 1 && argc != N_ARGS + 1)
-    {
-        if (rank == 0) print_help();
-        MPI_Abort(MPI_COMM_WORLD, 1);
-        return 1;
-    }
+    /// TODO: consider using dashed options and getopt().
+    if (argc < 5) arg_error(rank);
 
-    int kernel_id = std::stoi(argv[1]);
+    std::string kernel = argv[1];
     int n_reps = std::stoi(argv[2]);
     int n_iterations = std::stoi(argv[3]);
-    std::string output_fname = argv[4];
-
+    std::string outname = argv[4];
     Computation* comp;
-    switch (kernel_id)
+
+    if (kernel == "GatherBcast")
+        comp = new GatherBcast(rank, n_processes);
+    else if (kernel == "AllReduce")
+        comp = new AllReduce(rank, n_processes);
+    else
     {
-        case 0: comp = new GatherBcast(rank, n_processes); break;
-        case 1: comp = new AllReduce(rank, n_processes); break;
-        case 2: comp = new AllReduceSend(rank, n_processes); break;
-        default:
+        if (argc < 7) arg_error(rank);
+
+        int message_size = std::stoi(argv[5]);
+        int n_partners = std::stoi(argv[6]);
+
+        if (kernel == "PointToPoint")
+            comp = new PointToPoint(rank, n_processes, n_partners, message_size);
+        else if (kernel == "Shm")
         {
-            if (rank == 0) print_help();
-            MPI_Abort(MPI_COMM_WORLD, 1);
+            if (argc < 8) arg_error(rank);
+            bool lock_each_iteration = std::stoi(argv[7]) != 0;
+            comp = new Shm(rank, n_processes, n_partners, message_size,
+                           lock_each_iteration);
         }
     }
 
@@ -77,7 +97,7 @@ int main(int argc, char *argv[])
     if (rank == 0)
     {
         std::ofstream file;
-        file.open(output_fname + ".txt", std::ios_base::app);
+        file.open(outname + ".txt", std::ios_base::app);
         if (file.fail()) std::cerr << "Can't open output file\n";
         else
         {
