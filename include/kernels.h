@@ -124,13 +124,18 @@ struct PointToPoint : HalosExchange
         delete[] reqs;
     }
 
-    inline void begin(int) override { };
+    inline void begin(int) override
+    {
+        // If we're not in debug mode, we fill the sending buffer once only.
+        fill_sbuf(0);
+    };
     inline void end(int) override { };
 
     inline void kernel(int, int it) override
     {
+#ifdef DEBUG_MODE
         fill_sbuf(it);
-
+#endif
         // pointer to the first request.
         auto* rq = reqs;
         for (int i = 0; i < n_partners; i++)
@@ -142,9 +147,10 @@ struct PointToPoint : HalosExchange
         }
 
         MPI_Waitall(2 * n_partners, reqs, MPI_STATUSES_IGNORE);
-
+#ifdef DEBUG_MODE
         for (int i = 0; i < n_partners; i++)
             check_rbuf(i, it);
+#endif
     }
 };
 
@@ -276,7 +282,10 @@ struct Shm : HalosExchange
         if (lock_each_iteration) MPI_Win_lock_all(MPI_MODE_NOCHECK, win);
 
         // Direct write to shared memory segment.
-        fill_sbuf(it);
+        fill_sbuf(it); // <- this is not inside an #ifdef DEBUG block because
+                       // when using one-sided communications (see [1]), we
+                       // typically fill the shared window with data which is
+                       // stored somewhere else. So it's worth timing it.
 
         // MPI_Win_sync will sync the private and public copies of the window (see
         // memory models in [4]). It is a memory barrier, needed to make sure
@@ -323,15 +332,24 @@ struct Shm : HalosExchange
         // Intra-node communications are completed at this point (just memory
         // copies). So we can check the correctness of the data we just read.
         for (int i = 0; i < n_partners; i++)
-            if (partners_map[i] != MPI_UNDEFINED) check_rbuf(i, it);
+            if (partners_map[i] != MPI_UNDEFINED)
+                check_rbuf(i, it); // <- Again, when using one-sided
+                                   // communications, we typically copy the data
+                                   // we read from the shared window somewhere
+                                   // else. check_rbuf is not a copy, but loops
+                                   // over rbuf and has thus the same time
+                                   // complexity of a copy. So it's worth timing
+                                   // it.
 
         // Now we make sure inter-node communications finished as well and we
         // check the received data.
         if (n_inter_partners > 0)
             MPI_Waitall(2 * n_inter_partners, reqs, MPI_STATUS_IGNORE);
 
+#ifdef DEBUG_MODE
         for (int i = 0; i < n_partners; i++)
             if (partners_map[i] == MPI_UNDEFINED) check_rbuf(i, it);
+#endif
 
         MPI_Wait(&barrier_req, MPI_STATUS_IGNORE);
     }
