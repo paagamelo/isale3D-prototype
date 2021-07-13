@@ -1,18 +1,21 @@
 #!/bin/bash
 #
-#PBS -N isale-benchmark
-#PBS -l walltime=00:10:00
+#PBS -N shm-benchmark
+#PBS -l walltime=01:00:00
 #PBS -m bea
 #PBS -M lp320@ic.ac.uk
 #PBS -A dp120
-#PBS -l nodes=1:ppn=36
+#PBS -l nodes=2:ppn=36
 
-module load gcc/6.4
-module load openmpi/gcc/3.0.1
+# module load gcc/6.4
+# module load openmpi/gcc/3.0.1
 
-# module load intel/compilers/2021.2.0
-# module load intel/mpi/2021.2.0
+module load intel/compilers/2021.2.0
+module load intel/mpi/2021.2.0
 
 cd /scratch/dp120/dc-paga2/isale3D-prototype/
 
-mpiexec ./benchmark 0 30 1000 0
+for message_size in 493944 350880 286136 246968 201552 174440 ; do
+  mpiexec ./benchmark PointToPoint 1000 30 point-to-point $message_size 4
+  mpiexec ./benchmark Shm 1000 30 shm $message_size 4 1
+done
