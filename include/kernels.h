@@ -329,20 +329,15 @@ struct Shm : HalosExchange
         // No more shared memory operations below.
         if (lock_each_iteration) MPI_Win_unlock_all(win);
 
+#ifdef DEBUG_MODE
         // Intra-node communications are completed at this point (just memory
         // copies). So we can check the correctness of the data we just read.
         for (int i = 0; i < n_partners; i++)
             if (partners_map[i] != MPI_UNDEFINED)
-                check_rbuf(i, it); // <- Again, when using one-sided
-                                   // communications, we typically copy the data
-                                   // we read from the shared window somewhere
-                                   // else. check_rbuf is not a copy, but loops
-                                   // over rbuf and has thus the same time
-                                   // complexity of a copy. So it's worth timing
-                                   // it.
+                check_rbuf(i, it);
+#endif
 
-        // Now we make sure inter-node communications finished as well and we
-        // check the received data.
+        // Now we make sure inter-node communications finished as well.
         if (n_inter_partners > 0)
             MPI_Waitall(2 * n_inter_partners, reqs, MPI_STATUS_IGNORE);
 
