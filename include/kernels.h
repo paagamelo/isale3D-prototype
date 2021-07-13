@@ -3,7 +3,7 @@
  */
 /// TODO: split in .h and .cpp?
 /**
- * Contains kernels emulating halos exchange between processes, with different
+ * Contains kernels emulating halos exchange between processes, using different
  * techniques (e.g. point-wise communications, MPI-3 SHM, ...). Kernels in this
  * file are mainly adapted from [2] (bibliography is on top of benchmark.cpp).
  */
