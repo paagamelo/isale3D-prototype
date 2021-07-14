@@ -15,7 +15,7 @@ module load intel/mpi/2021.2.0
 
 cd /scratch/dp120/dc-paga2/isale3D-prototype/
 
-for message_size in 493944 350880 286136 246968 201552 174440 ; do
+for message_size in 123488 87720 71536 61744 50384 43608 ; do
   mpiexec ./benchmark PointToPoint 30 1000 point-to-point $message_size 4
   mpiexec ./benchmark Shm 30 1000 shm $message_size 4 1
 done
