@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+#PBS -N shm-benchmark
+#PBS -l walltime=01:00:00
+#PBS -m bea
+#PBS -M lp320@ic.ac.uk
+#PBS -A dp120
+#PBS -l nodes=2:ppn=36
+
+module load intel/compilers/2021.2.0
+module load intel/mpi/2021.2.0
+
+#module load intel/compilers/17.0.4
+#module load intel/mpi/17.0.4
+
+cd /scratch/dp120/dc-paga2/isale3D-prototype/
+
+for message_size in 123488 87720 71536 61744 50384 43608 ; do
+  mpiexec ./benchmark PointToPoint 30 1000 point-to-point $message_size 4
+  mpiexec ./benchmark PersistentComm 30 1000 persistent-comm $message_size 4
+done
