@@ -21,7 +21,8 @@
  * - with cmake >= 3.10: mkdir build && cd build && cmake .. && make benchmark
  * - without cmake >= 3.10: make
  *
- * Usage: mpirun -n P ./benchmark [kernel n_reps n_iterations outname]
+ * To run:
+ * mpirun -n P ./benchmark [kernel n_reps n_iterations outname]
  * P = number of processes to run.
  * kernel = name of the kernel to run (see kernels/).
  * n_reps = number of times the benchmark is repeated to find the minimum
@@ -29,7 +30,7 @@
  * n_iterations = number of times the kernel is run to find the average
  * elapsed time (see timer.h).
  * outname = name of the output file.
- * Extra arguments needed if kernel == PointToPoint (to be provided in the
+ * c PointToPoint (to be provided in the
  * following order):
  * message_size = size of messages in bytes.
  * n_partners = number of partners for each process (either 2, 4 or 8).
@@ -40,6 +41,9 @@
  * lock_each_iteration = whether to lock/unlock the shared window on a
  * per *iteration* basis (either 0 or 1: 0 meaning the window will be locked and
  * timed on a per *repetition* basis, 1 on a per *iteration* basis).
+ * Extra arguments needed if kernel == PersistentComm (to be provided in the
+ * following order):
+ * same as if kernel == Shm.
  *
  * Bibliography:
  * [1] https://cvw.cac.cornell.edu/mpionesided/onesidedef
@@ -48,10 +52,12 @@
  * [4] https://www.mpi-forum.org/docs/mpi-3.0/mpi30-report.pdf
  * [5] https://dl.acm.org/doi/10.5555/648136.748782
  * [6] https://www.mcs.anl.gov/research/projects/mpi/mpptest/
+ * [7] https://cvw.cac.cornell.edu/MPIP2P/percomm
  */
 #include "timer.cpp" // due to templates
 #include "kernels/shm.h"
 #include "kernels/exchange_dt.h"
+#include "kernels/persistent_communication.h"
 
 #include <mpi.h>
 #include <iostream>
@@ -97,6 +103,8 @@ int main(int argc, char *argv[])
 
         if (kernel == "PointToPoint")
             comp = new PointToPoint(rank, n_processes, n_partners, message_size);
+        else if (kernel == "PersistentComm")
+            comp = new PeristentComm(rank, n_processes, n_partners, message_size);
         else if (kernel == "Shm")
         {
             if (argc < 8) arg_error(rank);

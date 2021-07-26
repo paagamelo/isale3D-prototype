@@ -19,13 +19,15 @@ if [ "$EXIT_CODE" -ne "0" ] ; then
   exit 1
 fi
 
-for n_partners in 2 4 8 ; do
-  echo "mpirun --oversubscribe -n 9 ./benchmark PointToPoint 10 100 dummy 4096 $n_partners"
-  mpirun --oversubscribe -n 9 ./benchmark PointToPoint 10 100 dummy 4096 $n_partners
-  EXIT_CODE=$?
-  if [ "$EXIT_CODE" -ne "0" ] ; then
-      exit 1
-  fi
+for kernel in PointToPoint PersistentComm ; do
+  for n_partners in 2 4 8 ; do
+    echo "mpirun --oversubscribe -n 9 ./benchmark $kernel 10 100 dummy 4096 $n_partners"
+    mpirun --oversubscribe -n 9 ./benchmark $kernel 10 100 dummy 4096 $n_partners
+    EXIT_CODE=$?
+    if [ "$EXIT_CODE" -ne "0" ] ; then
+        exit 1
+    fi
+  done
 done
 
 for lock_each_iteration in 0 1 ; do

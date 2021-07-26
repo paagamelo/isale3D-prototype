@@ -8,6 +8,7 @@
  * [4] https://www.mpi-forum.org/docs/mpi-3.0/mpi30-report.pdf
  * [5] https://dl.acm.org/doi/10.5555/648136.748782
  * [6] https://www.mcs.anl.gov/research/projects/mpi/mpptest/
+ * [7] https://cvw.cac.cornell.edu/MPIP2P/percomm
  */
 /**
  * Contains kernels emulating iSALE3D timestep exchange. At each iteration,
