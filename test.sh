@@ -1,6 +1,7 @@
 #!/bin/bash
 
-## TODO: document.
+# This script runs all the possible kernels with different arguments and checks
+# the exit status of each run.
 
 make clean
 make

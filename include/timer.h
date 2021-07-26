@@ -1,5 +1,13 @@
 /*
  * Created by Lorenzo Paganelli (acse-lp320, paagamelo on GitHub).
+ *
+ * Bibliography:
+ * [1] https://cvw.cac.cornell.edu/mpionesided/onesidedef
+ * [2] https://intel.ly/3fBCeZd
+ * [3] https://link.springer.com/chapter/10.1007/978-3-540-75416-9_38
+ * [4] https://www.mpi-forum.org/docs/mpi-3.0/mpi30-report.pdf
+ * [5] https://dl.acm.org/doi/10.5555/648136.748782
+ * [6] https://www.mcs.anl.gov/research/projects/mpi/mpptest/
  */
 #ifndef ISALE3D_PROTOTYPE_TIMER_H
 #define ISALE3D_PROTOTYPE_TIMER_H
@@ -15,13 +23,13 @@
  * measure, being less sensitive to perturbations.
  * The user can provide two setup functions that will be called at the beginning
  * and at the end of each repetition, and will be included in the overall timing
- * (their contribution will be inverse to the number of iterations).
+ * (their contribution will be inverse to the number of iterations). This
+ * feature was introduced to reproduce the experiments described in [2].
  * Note the returned value is meaningful on process 0 only.
- * Note the bibliography is on top of benchmark.cpp.
  *
  * @tparam F - type of kernel function: void(int, int). Takes in the number of
  * repetitions and the number of iterations carried out so far.
- * @tparam G - type of setup functions: void(int). Take in the number of
+ * @tparam G - type of setup functions: void(int). Takes in the number of
  * repetitions carried out so far.
  * @tparam H - same as G.
  * @param rank - rank of this process.
@@ -52,9 +60,9 @@ double time(int rank, int n_reps, int n_iterations, F kernel, G begin, H end);
  * (timer.h).
  */
 // This is explicitly designed to work jointly with the time function defined
-// above. Using objects (as opposed to top-level functions) allows to have
-// minimal, identical signatures for various kernels. Different parameters
-// needed by different kernels are declared as class' attributes.
+// above. Using objects (as opposed to top-level functions) allows various
+// kernels to have minimal, identical signatures. Different parameters needed by
+// different kernels are declared as class' attributes.
 struct Computation
 {
     /*
@@ -90,7 +98,7 @@ struct Computation
 
 /**
  * See <F, G, H> time(int, int, int, int, F, G, H). This function is a wrapper
- * around that, using Computation objects.
+ * around that, using a Computation object.
  */
 double time(int rank, int n_reps, int n_iterations, Computation& comp);
 

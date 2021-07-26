@@ -7,7 +7,7 @@
 /**
  * Finds the global ranks of this process' partners. At the moment, only 2, 4
  * or 8 partners are supported. In case of two partners, they are found in a
- * one-dimensional fashion (i.e. they are the processes with global rank one
+ * one-dimensional fashion (i.e., they are the processes with global rank one
  * higher and one lower of this process' rank). In case of 4 or 8 partners,
  * a two-dimensional decomposition is adopted: processes are mapped to a 2D
  * grid and partners are located in such grid. They are the top, bottom, left

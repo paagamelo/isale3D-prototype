@@ -1,9 +1,34 @@
 /*
  * Created by Lorenzo Paganelli (acse-lp320, paagamelo on GitHub).
+ *
+ * Bibliography:
+ * [1] https://cvw.cac.cornell.edu/mpionesided/onesidedef
+ * [2] https://intel.ly/3fBCeZd
+ * [3] https://link.springer.com/chapter/10.1007/978-3-540-75416-9_38
+ * [4] https://www.mpi-forum.org/docs/mpi-3.0/mpi30-report.pdf
+ * [5] https://dl.acm.org/doi/10.5555/648136.748782
+ * [6] https://www.mcs.anl.gov/research/projects/mpi/mpptest/
  */
 /**
- * Contains kernels emulating iSALE3D timestep exchange. See the iSALE manual or
- * the update_timestep.F90 source file for further info.
+ * Contains kernels emulating iSALE3D timestep exchange. At each iteration,
+ * iSALE3D processes compute their local limiting timestep and its location
+ * (the 3D index of the cell it comes from). This info is then exchanged and
+ * the global limiting timestep is selected and used. For further info, see the
+ * iSALE manual.
+ */
+/*
+ * Kernels are inlined to (try to) reduce the number of function calls, so as to
+ * mitigate the overhead deriving from passing the kernel as argument to the
+ * `time` function (see comments in timer.h).
+ * Inlining is complex, but on average produces faster code. See C++ core
+ * guidelines for more:
+ * - https://bit.ly/2MQZypM
+ * - https://bit.ly/3oL8F91
+ * Note inlining requires functions definitions to be placed in header files,
+ * this is why kernels are not placed in a dedicated .cpp file.
+ *
+ * Part of the comment above is taken from my ACSE-5 coursework:
+ * https://github.com/acse-2020/group-project-most-vexing-parse
  */
 #ifndef ISALE3D_PROTOTYPE_EXCHANGE_DT_H
 #define ISALE3D_PROTOTYPE_EXCHANGE_DT_H
@@ -63,8 +88,8 @@ struct ExchangeDt : Computation
 };
 
 /**
- * Uses a gather followed by a broadcast. This replicates iSALE3D current
- * behavior (23/06/20).
+ * Uses a MPI_Gather followed by a MPI_Bcast. This replicates iSALE3D behavior
+ * on 23/06/21.
  */
 struct GatherBcast : ExchangeDt
 {
@@ -167,10 +192,10 @@ struct Packer
 };
 
 /**
- * Uses a MPI_Allreduce with MPI_MINLOC operator (see [4]). The x, y, z location
- * of the limiting timestep is packed in a single value and exchanged in the
- * MPI_Allreduce. All processes receive both the minimum timestep and its
- * location.
+ * Uses a MPI_Allreduce with MPI_MINLOC operator (see [4] section 5.9.4). The
+ * x, y, z location of the local limiting timestep is packed in a single value
+ * and exchanged in the MPI_Allreduce. All processes receive both the minimum
+ * timestep and its location.
  */
 struct AllReduce : ExchangeDt
 {
@@ -186,17 +211,20 @@ struct AllReduce : ExchangeDt
     {
         // initialise data with a seed which differs between processes.
         rand_init(31 * rank);
-        // In fortran, when using MPI_MINLOC, indices and values have to be
-        // coerced to the same type (i.e., double). In C++, they can't be
-        // of the same type (indices can only be integers). See [4] 5.9.4.
-        // Thus, in fortran we would pack 3D integer indices into doubles; in
-        // C++, we would use simple integers. Since we want to replicate fortran
-        // computation, we will pack 3D indices into doubles here.
-        // However, we will cast the packed value to int and effectively send
-        // integers rather than doubles. This is the best we can do.
-        // Since we are using integers under the hood, we need to make
-        // sure we can pack/unpack indices correctly in a single int (see the
-        // comments in Packer's constructor).
+        // When using the MPI_MINLOC operator, there is a difference between
+        // C++ and Fortran (note iSALE is written in Fortran):
+        // - in fortran, indices and values have to be coerced to the same type
+        // (i.e., double).
+        // - In C++, indices can only be integers. See [4] 5.9.4.
+        // This means that in fortran we would pack our 3D index into a double,
+        // whereas in C++ we would pack it into an integer. Since we want to
+        // replicate the computation we would carry out in fortran, we will pack
+        // 3D indices into doubles here. However, we will cast the packed values
+        // to int and effectively send integers rather than doubles. This is the
+        // best we can do.
+        // Since we are using integers under the hood, we need to make sure we
+        // can correctly pack/unpack 3D indices in a single int (for further
+        // info, see the comments on Packer's constructor).
         auto max_packed = MAX_COORD * (1 + packer.dscale + packer.dscale2);
         auto int_max = std::numeric_limits<int>::max();
         assert(max_packed <= int_max);

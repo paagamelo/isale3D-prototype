@@ -36,7 +36,7 @@ double time(int rank, int n_reps, int n_iterations, F kernel, G begin, H end)
     double min = -1;
     if (rank == 0)
         // Across different repetitions, we select the minimum of the biggest
-        // execution times, as it's a reproducible measure.
+        // execution times, as it's reproducible.
         min = *std::min_element(max_dts, max_dts + n_reps);
     delete[] dts;
     if (rank == 0) delete[] max_dts;

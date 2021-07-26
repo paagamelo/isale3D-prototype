@@ -4,7 +4,7 @@ project(isale3D-prototype)
 
 # set up compiler
 set(CMAKE_CPP_COMPILER mpic++)
-SET(CPPFLAGS "-Wall -Wpedantic -Wextra -std=c++17 -O3 -Ofast -march=native")
+SET(CPPFLAGS "-Wall -Wpedantic -Wextra -std=c++17 -O3 -march=native")
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${CPPFLAGS}")
 
 add_executable(benchmark src/benchmark.cpp src/setup.cpp)

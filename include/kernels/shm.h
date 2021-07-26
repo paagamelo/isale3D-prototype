@@ -1,14 +1,35 @@
 /*
  * Created by Lorenzo Paganelli (acse-lp320, paagamelo on GitHub).
+ *
+ * Bibliography:
+ * [1] https://cvw.cac.cornell.edu/mpionesided/onesidedef
+ * [2] https://intel.ly/3fBCeZd
+ * [3] https://link.springer.com/chapter/10.1007/978-3-540-75416-9_38
+ * [4] https://www.mpi-forum.org/docs/mpi-3.0/mpi30-report.pdf
+ * [5] https://dl.acm.org/doi/10.5555/648136.748782
+ * [6] https://www.mcs.anl.gov/research/projects/mpi/mpptest/
  */
-/// TODO: split in .h and .cpp?
 /**
- * Contains kernels emulating halos exchange between processes, using different
- * techniques (e.g. point-wise communications, MPI-3 SHM, ...). Kernels in this
- * file are mainly adapted from [2] (bibliography is on top of benchmark.cpp).
+ * Contains kernels simulating halos exchange between processes, using different
+ * techniques (e.g., point-wise communications, MPI-3 SHM). Kernels in this
+ * file are mainly adapted from [2] and [3].
  */
-#ifndef ISALE3D_PROTOTYPE_KERNELS_H
-#define ISALE3D_PROTOTYPE_KERNELS_H
+/*
+ * Kernels are inlined to (try to) reduce the number of function calls, so as to
+ * mitigate the overhead deriving from passing the kernel as argument to the
+ * `time` function (see comments in timer.h).
+ * Inlining is complex, but on average produces faster code. See C++ core
+ * guidelines for more:
+ * - https://bit.ly/2MQZypM
+ * - https://bit.ly/3oL8F91
+ * Note inlining requires functions definitions to be placed in header files,
+ * this is why kernels are not placed in a dedicated .cpp file.
+ *
+ * Part of the comment above is taken from my ACSE-5 coursework:
+ * https://github.com/acse-2020/group-project-most-vexing-parse
+ */
+#ifndef ISALE3D_PROTOTYPE_SHM_H
+#define ISALE3D_PROTOTYPE_SHM_H
 
 #include "timer.h"
 #include "setup.h"
@@ -19,7 +40,7 @@
 
 /**
  * An abstract computation featuring data exchanges between neighboring MPI
- * processes (partners). One-dimensional arrays of doubles are exchanged.
+ * processes (partners). A one-dimensional array of doubles is exchanged.
  */
 struct HalosExchange : Computation
 {
@@ -38,6 +59,8 @@ struct HalosExchange : Computation
     // array of requests (to be initialised by subclasses).
     MPI_Request* reqs = nullptr;
 
+    // Users can specify the message size rather than the number of values
+    // to exchange.
     HalosExchange(int rank, int n_processes, int n_partners, int message_size)
     {
         this->rank = rank;
@@ -71,10 +94,10 @@ struct HalosExchange : Computation
       * processes and iterations. At present, it is computed as:
       * this process' rank + the number of iterations carried out so far (it).
       */
-    // The rationale here is to fill sbuf with values that can be easily checked
-    // by other processes (processes just need to know the global rank of this
-    // process and the iteration number in order to check whether they received
-    // correct data).
+    // The rationale here is to fill sbuf with values whose correctness can be
+    // easily checked by other processes (they just need to know the global rank
+    // of this process and the iteration number in order to check whether they
+    // received correct data).
     virtual void fill_sbuf(int it)
     {
         for (int i = 0; i < n_elements; i++)
@@ -92,7 +115,7 @@ struct HalosExchange : Computation
     }
 
     /**
-     * Sets up a pair of non-blocking send and receive to/from partner i.
+     * Sets up a pair of non-blocking send and receive with partner i.
      */
     virtual void sendrecv(int i, MPI_Request* send_rq, MPI_Request* recv_rq,
                           int tag)
@@ -156,8 +179,7 @@ struct PointToPoint : HalosExchange
 
 /**
  * A halo exchange computation using MPI-3 SHM communication between processes
- * on the same node. For further info see [2] (bibliography is on top of
- * benchmark.cpp).
+ * on the same node. For further info see [2].
  */
 struct Shm : HalosExchange
 {
@@ -198,10 +220,6 @@ struct Shm : HalosExchange
         // across process ranks, which means that the first address in the memory
         // segment of process i is consecutive with the last address in the memory
         // segment of process i−1.
-        /// TODO: [future improvements] according to [4], setting the info key
-        /// "alloc_shared_noncontig" to true, the implementation can allocate the
-        /// memory requested by each process in a location that is close to this
-        /// process, improving performance.
         MPI_Win_allocate_shared(message_size, sizeof(double), MPI_INFO_NULL,
                                 shmcomm, &sbuf, &win);
         // We need to distinguish between processes located on the same node and
@@ -256,8 +274,6 @@ struct Shm : HalosExchange
     /// target RMA. However, this is not mentioned in [2], and [4] reports that
     /// this restriction is due to a complication which is absent in case of
     /// shared memory. We will thus ignore it.
-    /// TODO: [future improvements] according to [2], using individual locks
-    /// per-process can improve performance.
 
     inline void begin(int) override
     {
@@ -281,18 +297,22 @@ struct Shm : HalosExchange
 
         if (lock_each_iteration) MPI_Win_lock_all(MPI_MODE_NOCHECK, win);
 
+        // This kernel essentially behaves like `PointToPoint`, except it uses
+        // MPI-3 SHM when possible. The two kernels are designed to be compared
+        // against each other. Thus, one thing which is worth noting is that
+        // `PointToPoint` fills and checks the send/recv buffers on a per
+        // iteration basis in debug mode only. This kernel, on the other hand,
+        // fills the sending buffer at each iteration in any case. This is
+        // because filling the shared window with data is a fundamental part of
+        // one-sided communications (see, e.g., [1]), which we need to take into
+        // account when timing the kernel, in order to have a fair comparison.
+
         // Direct write to shared memory segment.
-        fill_sbuf(it); // <- this is not inside an #ifdef DEBUG block because
-                       // when using one-sided communications (see [1]), we
-                       // typically fill the shared window with data which is
-                       // stored somewhere else. So it's worth timing it.
+        fill_sbuf(it);
 
         // MPI_Win_sync will sync the private and public copies of the window (see
         // memory models in [4]). It is a memory barrier, needed to make sure
-        // the above write is publicly visible.
-        /// TODO: [future improvements] according to [4], in case of RMA unified
-        /// memory model, an update of a location in a private window in process
-        /// memory becomes visible without additional RMA calls.
+        // the memory write above is publicly visible.
         MPI_Win_sync(win);
         // A time barrier: we don't want to read other processes' memory
         // segments while they are still writing to it.
@@ -319,7 +339,7 @@ struct Shm : HalosExchange
         // We will now deal with intra-node partners.
         for (int i = 0; i < n_partners; i++)
             if (partners_map[i] != MPI_UNDEFINED)
-                // Memory is shared so we can load it directly.
+                // Memory is shared so we can directly read from it.
                 memcpy(rbuf[i], partners_ptrs[i], message_size);
 
         // This time barrier ensures no process overwrites its shared segment
@@ -343,11 +363,12 @@ struct Shm : HalosExchange
 
 #ifdef DEBUG_MODE
         for (int i = 0; i < n_partners; i++)
-            if (partners_map[i] == MPI_UNDEFINED) check_rbuf(i, it);
+            if (partners_map[i] == MPI_UNDEFINED)
+                check_rbuf(i, it);
 #endif
 
         MPI_Wait(&barrier_req, MPI_STATUS_IGNORE);
     }
 };
 
-#endif // ISALE3D_PROTOTYPE_KERNELS_H
+#endif // ISALE3D_PROTOTYPE_SHM_H

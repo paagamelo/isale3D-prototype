@@ -2,14 +2,28 @@
  * Created by Lorenzo Paganelli (acse-lp320, paagamelo on GitHub).
  */
 /**
- * TODO: document.
+ * This software was developed as part of Lorenzo Paganelli's ACSE-9 project.
+ * The aim of such project is to improve the parallel performance of iSALE3D, a
+ * well-established shock physics code. This software was developed to
+ * investigate more easily the benefits and drawbacks of possible optimisation
+ * strategies. The software has a modular architecture, consisting of a timer
+ * module and multiple kernels. A kernel is just a piece of code to be profiled
+ * with the timer module. The timer module is modeled after the well-established
+ * mpptest MPI benchmark [5,6], so as to guarantee accurate and reproducible
+ * measurements. Kernels emulating portions of interest of iSALE3D are developed
+ * as needed. Relevant portions of iSALE3D of arbitrary size can be prototyped
+ * with arbitrary fidelity in a kernel. This approach has the flexibility of
+ * providing arbitrarily granular information which can be trusted with
+ * arbitrary confidence (depending on the degree of fidelity of the profiled
+ * kernel).
  *
- * To compile with cmake: mkdir build && cd build && cmake .. && make benchmark
- * To compile without cmake: make
+ * To compile:
+ * - with cmake >= 3.10: mkdir build && cd build && cmake .. && make benchmark
+ * - without cmake >= 3.10: make
  *
  * Usage: mpirun -n P ./benchmark [kernel n_reps n_iterations outname]
  * P = number of processes to run.
- * kernel = name of the kernel to run (see exchange_dt.h and kernels.h).
+ * kernel = name of the kernel to run (see kernels/).
  * n_reps = number of times the benchmark is repeated to find the minimum
  * average elapsed time (see timer.h).
  * n_iterations = number of times the kernel is run to find the average
@@ -27,7 +41,6 @@
  * per *iteration* basis (either 0 or 1: 0 meaning the window will be locked and
  * timed on a per *repetition* basis, 1 on a per *iteration* basis).
  *
- *
  * Bibliography:
  * [1] https://cvw.cac.cornell.edu/mpionesided/onesidedef
  * [2] https://intel.ly/3fBCeZd
@@ -37,8 +50,8 @@
  * [6] https://www.mcs.anl.gov/research/projects/mpi/mpptest/
  */
 #include "timer.cpp" // due to templates
-#include "kernels.h"
-#include "exchange_dt.h"
+#include "kernels/shm.h"
+#include "kernels/exchange_dt.h"
 
 #include <mpi.h>
 #include <iostream>
@@ -69,7 +82,7 @@ int main(int argc, char *argv[])
     int n_reps = std::stoi(argv[2]);
     int n_iterations = std::stoi(argv[3]);
     std::string outname = argv[4];
-    Computation* comp;
+    Computation* comp = nullptr;
 
     if (kernel == "GatherBcast")
         comp = new GatherBcast(rank, n_processes);
@@ -91,6 +104,7 @@ int main(int argc, char *argv[])
             comp = new Shm(rank, n_processes, n_partners, message_size,
                            lock_each_iteration);
         }
+        else arg_error(rank);
     }
 
     double dt = time(rank, n_reps, n_iterations, *comp);

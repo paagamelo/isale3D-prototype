@@ -1,5 +1,5 @@
 CXXFLAGS=-std=c++11 -O3 -march=native # -DDEBUG_MODE
-HEADERS=$(wildcard include/*.h)
+HEADERS=$(wildcard include/*.h) $(wildcard include/kernels/*.h)
 # object files the benchmark depends on
 OBJ=src/setup.o
 export CXX=mpic++ # mpiicc if using intel

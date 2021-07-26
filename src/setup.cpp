@@ -5,6 +5,7 @@
 #include <iostream>
 #include <mpi.h>
 
+// just some syntactic sugar to manage indices
 #define PERIODIC_NEXT(i, size) (((i) + 1) % (size))
 #define PERIODIC_PREV(i, size) (((i) - 1 + (size)) % (size))
 
@@ -16,7 +17,6 @@ int find_partners(int rank, int n_processes, int n_partners, int* partners)
             std::cerr << "Number of partners must be either 2, 4 or 8\n";
         return 1;
     }
-    /// TODO: consider supporting other types of boundary conditions.
     // In case of two partners, they are found in a one-dimensional fashion.
     if (n_partners == 2)
     {
@@ -31,6 +31,13 @@ int find_partners(int rank, int n_processes, int n_partners, int* partners)
     MPI_Dims_create(n_processes, 2, dims);
     int nrows = dims[0];
     int ncols = dims[1];
+
+    /*
+     * The bit of code below computing (and describing) the (n,m) index of
+     * this process is taken from my ACSE-6 MPI coursework:
+     * https://github.com/acse-2020/acse-6-mpi-coursework-acse-lp320
+     */
+
     // Let us locate this process inside the grid: (n, m) is the (row, column)
     // index of this process in the grid, and is such that id = n * ncols + m.
     // In other words, we are distributing processes on the grid in a row major
