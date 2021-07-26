@@ -30,7 +30,7 @@
  * n_iterations = number of times the kernel is run to find the average
  * elapsed time (see timer.h).
  * outname = name of the output file.
- * c PointToPoint (to be provided in the
+ * Extra arguments needed if kernel == PointToPoint (to be provided in the
  * following order):
  * message_size = size of messages in bytes.
  * n_partners = number of partners for each process (either 2, 4 or 8).
