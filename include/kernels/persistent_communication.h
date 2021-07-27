@@ -46,7 +46,7 @@ struct PeristentComm : PointToPoint
         }
     }
 
-    ~PeristentComm()
+    ~PeristentComm() override
     {
         for (int i = 0; i < 2 * n_partners; i++)
             MPI_Request_free(&reqs[i]);
