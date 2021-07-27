@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#PBS -N shm-benchmark
+#PBS -N persistent-comm-benchmark
 #PBS -l walltime=01:00:00
 #PBS -m bea
 #PBS -M lp320@ic.ac.uk
